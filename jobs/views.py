@@ -121,6 +121,42 @@ class SubmitApplicationView(View):
             messages.success(request, "Your application has been submitted successfully.")
 
         return redirect('view_job_position', job_id=job_id)
+    
+
+
+class AddJobPositionView(View):
+    def get(self, request, company_id):
+        company = get_object_or_404(Company, id=company_id)
+        
+        # Check if the user is the admin of the company
+        if company.admin != request.user:
+            return redirect('some_error_page')  # Redirect to an error page or show a permission error
+        
+        # Proceed with displaying the form for adding a job position
+        return render(request, 'jobs/add_job_position.html', {'company': company})
+
+    def post(self, request, company_id):
+        company = get_object_or_404(Company, id=company_id)
+        
+        # Check if the user is the admin of the company
+        if company.admin != request.user:
+            return redirect('some_error_page')  # Redirect to an error page or show a permission error
+        
+        # Process the job position form submission
+        job_position = JobPosition(
+            title=request.POST['title'],
+            company=company,
+            description=request.POST['description'],
+            # Add other necessary fields here
+        )
+        job_position.save()
+
+        # Redirect to the page showing the job position
+        return redirect('view_job_position', job_id=job_position.id)
+
+
+
+    
 
 
 class JobAppliedApplicationsView(View):
@@ -145,9 +181,18 @@ class UserCompanyPositionsView(ListView):
     def get_queryset(self):
         queryset = super().get_queryset()
         if self.request.user.is_authenticated:
+            # Assuming the Company model has a foreign key to User model as 'admin'
             queryset = queryset.filter(company__admin=self.request.user)
         return queryset
-    
+
+    def get_context_data(self, **kwargs):
+       context = super().get_context_data(**kwargs)
+       if self.request.user.is_authenticated:
+        # Fetch all companies associated with the user
+        companies = Company.objects.filter(admin=self.request.user)
+        context['companies'] = companies
+       return context
+
 
 class JobMatchingCVsView(View):
     @method_decorator(login_required)

@@ -4,10 +4,23 @@
 
 {% block content %}
 <header>
-  cx   <h1 class="mt-5">My Company Positions</h1>
+  <h1 class="mt-5">Your Company Positions List</h1>
 </header>
 <main>
     <section>
+      
+
+        {% if user.is_authenticated %}
+            <!-- Check if user is admin of the company before showing the button -->
+            {% for company in companies %}
+                {% if company.admin == user %}
+                    <a href="{% url 'add_job_position' company_id=company.id %}" class="btn btn-success ml-2">Add New Job Position</a>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <p>You need to be logged in to add a new job position.</p>
+        {% endif %}
+        
         {% if job_positions %}
             <ul class="list-group mt-3">
                 {% for job in job_positions %}
