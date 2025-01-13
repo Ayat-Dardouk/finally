@@ -1,29 +1,26 @@
 {% extends 'jobs/base.html' %}
-{% load static %}
-
 {% block title %}{{ job_position.title }}{% endblock %}
 
 {% block content %}
 <header>
-    <h1 class="mt-5">{{ job_position.title }}</h1>
+    <h1 class="mt-5">{{ job_position.title }} at {{ job_position.company.name }}</h1>
 </header>
 <main>
-
     <section>
         <p><strong>Company:</strong> {{ job_position.company.name }}</p>
         <p><strong>Description:</strong> {{ job_position.description }}</p>
-        <p><strong>Required Skills:</strong> {{ job_position.required_skills }}</p>
-        <p><strong>Application Deadline:</strong> {{ job_position.application_deadline }}</p>
-        <p><strong>Salary Range:</strong> {{ job_position.salary_range }}</p>
-        <p><strong>Job Type:</strong> {{ job_position.get_job_type_display }}</p>
-        <a href="{% url 'list_job_positions' %}" class="btn btn-link">< Back to All Jobs</a>
-        {% if not user.is_authenticated %}
-            <a href="{% url 'submit_application' job_position.id %}" class="btn btn-primary">Apply for this job</a>
-        {% endif %}
-
+        <p><strong>Required Skills:</strong> {{ job_position.required_skills|default:"None" }}</p>
+        <p><strong>Application Deadline:</strong> {{ job_position.application_deadline|date:"F d, Y" }}</p>
+        <p><strong>Salary Range:</strong> {{ job_position.salary_range|default:"Not specified" }}</p>
+        <p><strong>Job Type:</strong> {{ job_position.get_job_type_display|default:"Not specified" }}</p>
+        <a href="{% url 'list_job_positions' %}" class="btn btn-link">&lt; Back to All Jobs</a>
+        
         {% if user.is_authenticated and user == job_position.company.admin %}
             <a href="{% url 'job_applied_applications' job_position.id %}" class="btn btn-info">View Applications</a>
             <a href="{% url 'job_matching_cvs' job_position.id %}" class="btn btn-info">View Matched CVs</a>
+            <a href="{% url 'add_job_position' job_position.company.id %}" class="btn btn-success">Add New Job</a> <!-- New Button -->
+        {% else %}
+            <a href="{% url 'submit_application' job_position.id %}" class="btn btn-primary">Apply for this Job</a>
         {% endif %}
     </section>
 </main>

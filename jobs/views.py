@@ -13,6 +13,7 @@ from django.contrib.auth import logout
 from django.shortcuts import redirect
 from .utils import match_cvs_to_job
 import joblib
+from django.utils import timezone
 
 from django.contrib import messages
 
@@ -20,8 +21,22 @@ def logout_view(request):
     logout(request)
     return redirect('login')
 
+from django.shortcuts import get_object_or_404, redirect
+from django.views import View
+from django.urls import reverse_lazy
+from .models import JobPosition
+
+class DeleteJobPositionView(View):
+    def post(self, request, pk):
+        job_position = get_object_or_404(JobPosition, pk=pk)
+        job_position.delete()
+        return redirect('list_job_positions')  # Redirect to the job positions list after deletion
+
 class LoginView(auth_views.LoginView):
     template_name = 'jobs/login.html'
+
+
+
 
 class ListJobPositionsView(ListView):
     model = JobPosition
@@ -39,7 +54,7 @@ class ListJobPositionsView(ListView):
         context = super().get_context_data(**kwargs)
         context['companies'] = Company.objects.all()
         return context
-    
+
 
 class UploadCVView(View):
     def get(self, request):
@@ -123,40 +138,65 @@ class SubmitApplicationView(View):
         return redirect('view_job_position', job_id=job_id)
     
 
+from django.shortcuts import render, get_object_or_404, redirect
+from django.views import View
+from .models import Company, JobPosition
+
+from django.utils import timezone
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.utils import timezone
+from .models import JobPosition, Company
+
+from django.shortcuts import render, get_object_or_404, redirect
+from django.utils import timezone
+from .models import JobPosition, Company
+
+from datetime import datetime
 
 class AddJobPositionView(View):
     def get(self, request, company_id):
         company = get_object_or_404(Company, id=company_id)
         
-        # Check if the user is the admin of the company
+        # Ensure the user is the admin of the company
         if company.admin != request.user:
-            return redirect('some_error_page')  # Redirect to an error page or show a permission error
+            return redirect('some_error_page')  # Redirect to an error page or permission error page
         
-        # Proceed with displaying the form for adding a job position
+        # Render the job position form
         return render(request, 'jobs/add_job_position.html', {'company': company})
 
     def post(self, request, company_id):
         company = get_object_or_404(Company, id=company_id)
-        
-        # Check if the user is the admin of the company
+
+        # Ensure the user is the admin of the company
         if company.admin != request.user:
-            return redirect('some_error_page')  # Redirect to an error page or show a permission error
-        
-        # Process the job position form submission
+            return redirect('some_error_page')  # Redirect to an error page or permission error page
+
+        # Get the form data
+        title = request.POST.get('title')
+        description = request.POST.get('description')
+        required_skills = request.POST.get('required_skills', '')
+        application_deadline = request.POST.get('application_deadline')
+        salary_range = request.POST.get('salary_range', '')
+        job_type = request.POST.get('job_type')
+
+    
+
+        # Create and save the new job position
         job_position = JobPosition(
-            title=request.POST['title'],
+            title=title,
             company=company,
-            description=request.POST['description'],
-            # Add other necessary fields here
+            description=description,
+            required_skills=required_skills,
+            application_deadline=application_deadline,
+            salary_range=salary_range,
+            job_type=job_type,
         )
         job_position.save()
 
-        # Redirect to the page showing the job position
+        # Redirect to the view page for the job position
         return redirect('view_job_position', job_id=job_position.id)
 
-
-
-    
 
 
 class JobAppliedApplicationsView(View):
@@ -217,3 +257,18 @@ class JobMatchingCVsView(View):
             'matched_applications': matched_applications,
             'scores': scores
         })
+
+
+from django import template
+
+register = template.Library()
+
+@register.filter
+def break_filter(value):
+    """Simulate a break in a for loop."""
+    return None
+
+@register.filter
+def continue_filter(value):
+    """Simulate a continue in a for loop."""
+    return value

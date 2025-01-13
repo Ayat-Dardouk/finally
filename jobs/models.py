@@ -1,6 +1,7 @@
 from django.db import models
 from django_extensions.db.models import TimeStampedModel
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 
 class Company(TimeStampedModel):
@@ -22,11 +23,13 @@ class JobPosition(TimeStampedModel):
     required_skills = models.TextField()  # Comma-separated skills
     application_deadline = models.DateField(blank=True, null=True)
     salary_range = models.CharField(max_length=100, blank=True, null=True)
-    job_type = models.CharField(max_length=50, choices=[('FT', 'Full-Time'), ('PT', 'Part-Time'), ('CT', 'Contract')])
+    job_type = models.CharField(
+        max_length=50,
+        choices=[('FT', 'Full-Time'), ('PT', 'Part-Time'), ('CT', 'Contract')]
+    )
 
     def __str__(self):
         return f"{self.title} at {self.company.name}"
-
 
 class Application(TimeStampedModel):
     job_position = models.ForeignKey(JobPosition, on_delete=models.CASCADE, related_name='applications')

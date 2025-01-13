@@ -1,22 +1,22 @@
 {% extends 'jobs/base.html' %}
 {% load static %}
+{% load custom_filters %}
 
 {% block wrapper %}
 <div class="custom-wrapper">
     <style>
         #myCarousel .carousel-inner {
-            height: 500px; /* Set the height of the carousel */
+            height: 500px;
         }
-        
+
         #myCarousel .carousel-inner img {
-            height: 100%; /* Make the image take up the full height */
-            width: auto; /* Maintain the aspect ratio */
-            object-fit: cover; /* Ensures the image fills the area without distortion */
+            height: 100%;
+            width: auto;
+            object-fit: cover;
         }
     </style>
-    
+
     {% block content %}
-  
     <!-- Full-width Carousel -->
     <div id="myCarousel" class="carousel slide" data-ride="carousel" style="height: 500px;">
         <!-- Indicators -->
@@ -56,6 +56,7 @@
         </header>
         <main>
             <section>
+                <!-- Filter Form -->
                 <form method="get" class="form-inline mb-3">
                     <label for="company" class="mr-2">Filter by Company:</label>
                     <select name="company" id="company" class="form-control mr-2">
@@ -64,15 +65,20 @@
                             <option value="{{ company.id }}" {% if request.GET.company == company.id|stringformat:"s" %}selected{% endif %}>{{ company.name }}</option>
                         {% endfor %}
                     </select>
+
+                    <!-- Job Title Filter -->
+                    <label for="job_title" class="mr-2">Filter by Job Title:</label>
+                    <input type="text" name="job_title" id="job_title" class="form-control mr-2" value="{{ request.GET.job_title }}" placeholder="Enter job title">
+
                     <button type="submit" class="btn btn-primary">Filter</button>
 
                     {% if user.is_authenticated %}
-                    <!-- Check if user is admin of the company before showing the button -->
-                    {% for company in companies %}
-                        {% if company.admin == user %}
-                            <a href="{% url 'add_job_position' company_id=company.id %}" class="btn btn-success ml-2">Add New Job Position</a>
-                        {% endif %}
-                    {% endfor %}
+                        <!-- Add Job Position Button -->
+                        {% for company in companies %}
+                            {% if company.admin == user %}
+                                <a href="{% url 'add_job_position' company_id=company.id %}" class="btn btn-success ml-2">Add New Job Position</a>
+                            {% endif %}
+                        {% endfor %}
                     {% endif %}
                 </form>
 
@@ -81,6 +87,13 @@
                         {% for job in job_positions %}
                             <li class="list-group-item">
                                 <a href="{% url 'view_job_position' job.id %}">{{ job.title }}</a> at {{ job.company.name }}
+
+                                {% if user == job.company.admin %}
+                                    <form action="{% url 'delete_job_position' job.id %}" method="post" style="display:inline;" id="delete-form-{{ job.id }}">
+                                        {% csrf_token %}
+                                        <button type="button" class="btn btn-danger btn-sm ml-3" onclick="confirmDelete('{{ job.id }}')">Delete</button>
+                                    </form>
+                                {% endif %}
                             </li>
                         {% endfor %}
                     </ul>
@@ -90,6 +103,16 @@
             </section>
         </main>
     </div>
+
+    <script>
+        function confirmDelete(jobId) {
+            const confirmation = confirm("Are you sure you want to delete this job position?");
+            if (confirmation) {
+                document.getElementById('delete-form-' + jobId).submit();
+            }
+        }
+    </script>
+
     {% endblock %}
 </div>
-{% endblock wrapper %}
+{% endblock %}
